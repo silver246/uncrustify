@@ -676,9 +676,18 @@ sp_func_def_paren_empty;
 extern Option<iarf_e>
 sp_inside_fparens;
 
+// Add or remove space inside empty function call '()'.
+// Overrides sp_after_angle unless use_sp_after_angle_always is set to true.
+extern Option<iarf_e>
+sp_func_call_inside_fparens;
+
 // Add or remove space inside function '(' and ')'.
 extern Option<iarf_e>
 sp_inside_fparen;
+
+// Add or remove space inside function call '(' and ')'.
+extern Option<iarf_e>
+sp_func_call_inside_fparen;
 
 // Add or remove space inside the first parentheses in a function type, as in
 // 'void (*x)(...)'.

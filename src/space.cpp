@@ -1929,6 +1929,20 @@ static iarf_e do_space(chunk_t *first, chunk_t *second, int &min_sp)
          return(options::sp_func_call_user_inside_fparen());
       }
 
+      if (  (get_chunk_parent_type(first) == CT_FUNC_CALL)
+              || (  (get_chunk_parent_type(second) == CT_FUNC_CALL)))
+      {
+          if (chunk_is_token(first, CT_FPAREN_OPEN) && chunk_is_token(second, CT_FPAREN_CLOSE))
+          {
+              // Add or remove space inside empty function call '()'.
+              log_rule("sp_func_call_inside_fparens");
+              return(options::sp_func_call_inside_fparens());
+          }
+          // Add or remove space inside function call '(' and ')'.
+          log_rule("sp_func_call_inside_fparen");
+          return(options::sp_func_call_inside_fparen());
+      }
+
       if (chunk_is_token(first, CT_FPAREN_OPEN) && chunk_is_token(second, CT_FPAREN_CLOSE))
       {
          // Add or remove space inside empty function '()'.

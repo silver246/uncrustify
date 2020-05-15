@@ -66,7 +66,9 @@ temporary_iarf_option for_qt_options[] =
 // Issue #481
 // connect( timer,SIGNAL( timeout() ),this,SLOT( timeoutImage() ) );
    { &options::sp_inside_fparens          },
+   { &options::sp_func_call_inside_fparens},
    { &options::sp_paren_paren             },
+   { &options::sp_func_call_inside_fparen },
    { &options::sp_before_comma            },
    { &options::sp_after_comma             },
 // Bug #654
