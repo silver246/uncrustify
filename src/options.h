@@ -80,6 +80,10 @@ tok_split_gte;
 extern Option<bool>
 disable_processing_nl_cont;
 
+// Specify the patterns to disable processing of a line.
+extern Option<string>
+disable_processing_line_pattern;
+
 // Specify the marker used in comments to disable processing of part of the
 // file.
 // The comment should be used alone in one line.

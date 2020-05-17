@@ -25,6 +25,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <stack>
+#include <sstream>
 
 
 #define LE_COUNT(x)    cpd.le_counts[static_cast<size_t>(LE_ ## x)]
@@ -241,6 +242,12 @@ static bool parse_newline(tok_ctx &ctx);
  */
 static void parse_pawn_pattern(tok_ctx &ctx, chunk_t &pc, c_token_t tt);
 
+/**
+ * Parse a complete line and check if it contains an ignore pattern.
+ * If it does contain an ignore pattern, mark the line as CT_UNKNOWN and return true.
+ * Otherwise return false.
+ */
+static bool parse_ignore_line_pattern(tok_ctx &ctx, chunk_t &pc);
 
 static bool parse_ignored(tok_ctx &ctx, chunk_t &pc);
 
@@ -1904,6 +1911,52 @@ static bool parse_macro(tok_ctx &ctx, chunk_t &pc, const chunk_t *prev_pc)
    return(false);
 }
 
+static bool parse_ignore_line_pattern(tok_ctx &ctx, chunk_t &pc)
+{
+   ctx.save();
+   pc.str.clear();
+
+   while (  ctx.more()
+         && (ctx.peek() != '\r')
+         && (ctx.peek() != '\n'))
+   {
+      pc.str.append(ctx.get());
+   }
+
+   if (pc.str.size() == 0)
+   {
+      // end of file?
+      return(false);
+   }
+
+   // See if one of the disable processing patterns is on this line
+   log_rule_B("disable_processing_line_pattern");
+   const auto &ontext = options::disable_processing_line_pattern();
+
+   if (!ontext.empty())
+   {
+      std::istringstream isstream(ontext);
+      std::string pattern;
+      while (std::getline(isstream, pattern, ','))
+      {
+         size_t first = pattern.find_first_not_of(' ');
+         size_t last = pattern.find_last_not_of(' ');
+         if (last > first) // Make sure that pattern contains more than one char
+         {
+            pattern = pattern.substr(first, (last-first+1));
+            if (!pattern.empty() && pc.str.find(pattern.c_str()) >= 0)
+            {
+               set_chunk_type(&pc, CT_UNKNOWN);
+               return(true);
+            }
+         }
+      }
+   }
+
+   ctx.restore();
+   pc.str.clear();
+   return false;
+}
 
 static bool parse_ignored(tok_ctx &ctx, chunk_t &pc)
 {
@@ -1993,6 +2046,11 @@ static bool parse_next(tok_ctx &ctx, chunk_t &pc, const chunk_t *prev_pc)
    pc.orig_col  = ctx.c.col;
    pc.nl_count  = 0;
    pc.flags     = PCF_NONE;
+
+   if (parse_ignore_line_pattern(ctx, pc))
+   {
+       return(true);
+   }
 
    // If it is turned off, we put everything except newlines into CT_UNKNOWN
    if (cpd.unc_off)
